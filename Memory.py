@@ -23,18 +23,18 @@ class Memory(tk.Frame):
         self.data = [[f"0x{i:04x}",0,""] for i in range(self.memSize) ]
         self.scroll_val = 0 # de combien on décale l'affichage dans data
 
-        self.labels_titre = []
+        self.labels_title = []
         for i,titre in enumerate(["@","dec","ascii"]):
             l = tk.Label(self, text=titre,bg = "#FFFFFF",borderwidth=1,relief="solid",padx=10,pady=5)
             # l.bindtags(("Memory",) + l.bindtags())
             l.grid(row=0,column=i,sticky = "NSEW")
-            self.labels_titre.append(l)
+            self.labels_title.append(l)
 
         self.displayed = [ [0 for j in range(3)] for i in range(self.lineDisplay) ]
 
         for i in range(self.lineDisplay):
             for j in range(3):
-                l = tk.Label(self,text= "", width = self.labels_titre[j].cget("width"),bg = "#FFFFFF",borderwidth=1,relief="solid",pady=2)
+                l = tk.Label(self,text= "", width = self.labels_title[j].cget("width"),bg = "#FFFFFF",borderwidth=1,relief="solid",pady=2)
                 
                 # l.bindtags(("Memory",) + l.bindtags())
                 # if i==0: print(l.bindtags())
@@ -43,10 +43,60 @@ class Memory(tk.Frame):
                 self.displayed[i][j] = l
         # self.bindtags(("Memory",) + self.bindtags() )
         
-        # self.bind("<Enter>", lambda e: self.bind_all("<Button>", self.scrollevt))
-        # self.bind("<Leave>", lambda e: self.unbind_all("<Button>"))
-        self.bind("<Enter>", lambda e: self.bind_all("<Button>", self.scrollevt))
-        self.bind("<Leave>", lambda e: self.unbind_all("<Button>"))
+        self.bind("<Enter>", self.handler_enter)
+        self.bind("<Leave>", self.handler_leave)
+
+        self.bind("<Button>", self.scrollevt)
+
+        # for some reason, without this, the scoll event does not register
+        # but the keypresses do still work
+        for child in self.winfo_children(): 
+            child.bind("<Button>", self.scrollevt)
+        
+        self.bind("<KeyPress>", self.kbevt)
+        self.bind("<KeyRelease>", self.kbevt)
+
+        self.mods = []
+
+    def handler_enter(self,evt):
+        self.focus_force()
+        # self.bind_all("<Button>", self.scrollevt)
+
+    def handler_leave(self,evt):
+        self.root.focus_force()
+        # self.unbind_all("<Button>")
+
+    def kbevt(self,evt):
+        # print(f"keypressed : {evt.keysym}")
+        k = evt.keysym
+        # print(self.mods, k, evt.type)
+        if evt.type == tk.EventType.KeyPress: # press
+            if k in ["Shift_L","Control_L"]:
+                if not k in self.mods:
+                    self.mods.append(k)
+            elif k == "Up":
+                if "Shift_L" in self.mods:
+                    if "Control_L" in self.mods:
+                        self.scroll(-self.lineDisplay*16)
+                    else:
+                        self.scroll(-self.lineDisplay)
+                else :
+                    self.scroll(-1)
+            elif k == "Down":
+                if "Shift_L" in self.mods:
+                    if "Control_L" in self.mods:
+                        self.scroll(self.lineDisplay*16)
+                    else:
+                        self.scroll(self.lineDisplay)
+                else :
+                    self.scroll(1)
+        elif evt.type == tk.EventType.KeyRelease: #release
+            if k in ["Shift_L","Control_L"]:
+                if  k in self.mods:
+                    self.mods.pop(self.mods.index(k))
+
+        
+
     def scrollevt(self,evt):
         if evt.num == 4:
             self.scroll(-1)
@@ -54,9 +104,8 @@ class Memory(tk.Frame):
             self.scroll(1)
 
     def scroll(self,n):
-        if self.memSize <= n + self.scroll_val + self.lineDisplay:
+        if self.memSize <= n -1 + self.scroll_val + self.lineDisplay:
             return
-            print(f"{n=}, {self.scroll_val=}")
 
         self.scroll_val = max(0,self.scroll_val + n)
         self.update_aff()
@@ -75,10 +124,7 @@ class Memory(tk.Frame):
         if i>len(self.data) or self.data[i] == [""]*3:
             raise(IndexError(f"Trying to access cell {i} while memory size is {self.memSize}"))
         self.data[i][1] = val%256
-        if chr(val%256).isprintable():
-            self.data[i][2] = chr(val%256)
-        else:
-            self.data[i][2] = f"\\u{val%256:02x}"
+        self.data[i][2] = repr(chr(val%256))[1:-1]
         self.update_aff()
 
     def getCell(self,i):
@@ -92,7 +138,7 @@ if __name__ == '__main__':
     app = tk.Tk()
     app.title("test Memory")
 
-    testSize=100
+    testSize=256
 
     mem = Memory(app, memorySize=testSize, lineDisplay=32)
     mem.pack(padx=10,pady=10)
@@ -100,7 +146,7 @@ if __name__ == '__main__':
     print(mem.bindtags())
 
     import random as rd
-    for i in range(1000):
+    for i in range(300):
         mem.setCell(rd.randint(0,testSize-1), rd.randint(0,255))
 
     app.mainloop()

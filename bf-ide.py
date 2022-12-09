@@ -7,6 +7,9 @@ import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
 import numpy as np
 
+from Memory import Memory
+
+ 
 # number of cells in the memory (default is 30000)
 MEM_SIZE = 30000
 
@@ -176,26 +179,52 @@ class App:
 
         self.tk.mainloop()
 
-
 class IDE(tk.Frame):
-    def __init__(self,root):
-        super().__init__(root, width=500, height=500, relief=tk.RAISED) # ICIICIC
+    """
+    the IDE widget contains :
+    * a text zone for the current code to edit
+    * a memory (+display) for the BF execution
+        > when the BF code is executed (not debugged), the memory will only update at the end of the execution
+        > when debugging, each step will update memory
+    * an input text zone (with a checkbox for wether to consider ascii or decimal values)
+    * an output text zone (with a checkbox for wether to show ascii or decimal values)
+    * a menu bar with :
+        * File
+            * open file
+            * save file
+            * save file to ...
+            * recent files ? requieres storage
+        * options
+            * memory size
+            * cell size
+    * toolbar with buttons for ;
+        * run 
+        * run to cursor (then debug)
+        * debug
+        * step
+    """
 
-        codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
-        codeZone.pack(padx=10,pady=10)
+    def __init__(self,root):
+        super().__init__(root, width=500, height=500, relief=tk.RIDGE,borderwidth=1) 
+        self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
+        self.codeZone.pack(padx=10,pady=10)
+
+        self.mem = Memory(self, MEM_SIZE, CELL_TYPE)
+
+        self.mem.pack(padx=10,pady=10)
 
 
 if __name__ == '__main__':
 
-    interpreter = Interpreter()
-    interpreter.load_code_from_path("./decimal_ascii_to_decimal_value.bf")
+    # interpreter = Interpreter()
+    # interpreter.load_code_from_path("./decimal_ascii_to_decimal_value.bf")
     # interpreter.load_code_from_path("./test.bf")
 
     # print(interpreter.code)
-    interpreter.optimize()
+    # interpreter.optimize()
     # print(interpreter.code)
 
-    interpreter.set_input("125")
+    # interpreter.set_input("125")
 
     # print("going to execute : ")
     # print("".join(interpreter.code))
