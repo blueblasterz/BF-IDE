@@ -7,7 +7,8 @@ import tkinter as tk
 import tkinter.scrolledtext as scrolledtext
 import numpy as np
 
-from Memory import Memory
+from BFMemory import BFMemory
+from BFIO import BFInput, BFOutput
 
  
 # number of cells in the memory (default is 30000)
@@ -18,6 +19,16 @@ CELL_TYPE = np.uint8
 
 # bf interpreter
 class Interpreter:
+    """
+    The Interpreter loads and executes BF code
+    It is NOT a Tkinter widget
+    However:
+    * if a BFMemory widget is given in the constructor, then it will be updated
+    * if a BFInput widget is given, then instead of asking the user for input in command line,
+      it will ask visually with the BFINPUT
+    * if a BFOutput widget is given, then instead of printing the result to the terminal,
+      it will print it in the BFInput
+    """
     def __init__(self, mem_size: int = MEM_SIZE, cell_size: type = CELL_TYPE ) -> None :
         self.mem = np.zeros(mem_size, dtype=cell_size)
         self.mem_size = mem_size
@@ -168,17 +179,6 @@ class Interpreter:
         while self.pc < target:
             self.step(1)
 
-class App:
-    def __init__(self):
-        self.tk = tk.Tk()
-        self.tk.title("BF-IDE")
-
-        self.ide = IDE(self.tk)
-
-        self.ide.pack(padx=10,pady=10)
-
-        self.tk.mainloop()
-
 class IDE(tk.Frame):
     """
     the IDE widget contains :
@@ -206,13 +206,33 @@ class IDE(tk.Frame):
 
     def __init__(self,root):
         super().__init__(root, width=500, height=500, relief=tk.RIDGE,borderwidth=1) 
-        self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
-        self.codeZone.pack(padx=10,pady=10)
+        self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30, font='TkFixedFont')
+        self.codeZone.grid(column=0,row=0,padx=10,pady=10)
 
-        self.mem = Memory(self, MEM_SIZE, CELL_TYPE)
+        self.mem = BFMemory(self, MEM_SIZE, CELL_TYPE)
 
-        self.mem.pack(padx=10,pady=10)
+        self.mem.grid(column=1,row=0,padx=10,pady=10)
 
+        
+class App:
+    def __init__(self):
+        self.tk = tk.Tk()
+        self.tk.title("BF-IDE")
+
+        self.ide = IDE(self.tk)
+
+        self.ide.pack(padx=10,pady=10)
+
+        self.tk.bind_all("<KeyPress>", self.kbdevt)
+
+        self.tk.mainloop()
+
+
+    def kbdevt(self,e):
+        k = e.keysym
+        # print(f"from App : {k}")
+        if k == "q" or k == "Escape":
+            self.tk.destroy()
 
 if __name__ == '__main__':
 
