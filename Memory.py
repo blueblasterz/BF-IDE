@@ -10,7 +10,7 @@ class Memory(tk.Frame):
 
     """
 
-    def __init__(self,root,memorySize = 30000, cellType = np.uint8, lineDisplay=10):
+    def __init__(self,root,memorySize = 30000, cellType = np.uint8, lineDisplay=16):
         
         tk.Frame.__init__(self,root, relief=tk.RIDGE, borderwidth=1)
         self.root = root
@@ -25,7 +25,7 @@ class Memory(tk.Frame):
 
         self.labels_title = []
         for i,titre in enumerate(["@","dec","ascii"]):
-            l = tk.Label(self, text=titre,bg = "#FFFFFF",borderwidth=1,relief="solid",padx=10,pady=5)
+            l = tk.Label(self, text=titre,bg = "#FFFFFF",borderwidth=1,relief="solid",padx=10,pady=5, font='TkFixedFont')
             # l.bindtags(("Memory",) + l.bindtags())
             l.grid(row=0,column=i,sticky = "NSEW")
             self.labels_title.append(l)
@@ -34,7 +34,7 @@ class Memory(tk.Frame):
 
         for i in range(self.lineDisplay):
             for j in range(3):
-                l = tk.Label(self,text= "", width = self.labels_title[j].cget("width"),bg = "#FFFFFF",borderwidth=1,relief="solid",pady=2)
+                l = tk.Label(self,text= "", width = self.labels_title[j].cget("width"),bg = "#FFFFFF",borderwidth=1,relief="solid",pady=2, font='TkFixedFont')
                 
                 # l.bindtags(("Memory",) + l.bindtags())
                 # if i==0: print(l.bindtags())
@@ -77,17 +77,21 @@ class Memory(tk.Frame):
             elif k == "Up":
                 if "Shift_L" in self.mods:
                     if "Control_L" in self.mods:
-                        self.scroll(-self.lineDisplay*16)
+                        self.scroll(-4096)
                     else:
                         self.scroll(-self.lineDisplay)
+                elif "Control_L" in self.mods:
+                    self.scroll(-256)
                 else :
                     self.scroll(-1)
             elif k == "Down":
                 if "Shift_L" in self.mods:
                     if "Control_L" in self.mods:
-                        self.scroll(self.lineDisplay*16)
+                        self.scroll(4096)
                     else:
                         self.scroll(self.lineDisplay)
+                elif "Control_L" in self.mods:
+                    self.scroll(256)
                 else :
                     self.scroll(1)
         elif evt.type == tk.EventType.KeyRelease: #release
@@ -105,7 +109,7 @@ class Memory(tk.Frame):
 
     def scroll(self,n):
         if self.memSize <= n -1 + self.scroll_val + self.lineDisplay:
-            return
+            n = self.memSize - self.scroll_val - self.lineDisplay
 
         self.scroll_val = max(0,self.scroll_val + n)
         self.update_aff()
@@ -138,9 +142,9 @@ if __name__ == '__main__':
     app = tk.Tk()
     app.title("test Memory")
 
-    testSize=256
+    testSize=256*256
 
-    mem = Memory(app, memorySize=testSize, lineDisplay=32)
+    mem = Memory(app, memorySize=testSize, lineDisplay=16)
     mem.pack(padx=10,pady=10)
     
     print(mem.bindtags())
