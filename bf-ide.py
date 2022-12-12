@@ -29,7 +29,7 @@ class Interpreter:
     * if a BFOutput widget is given, then instead of printing the result to the terminal,
       it will print it in the BFInput
     """
-    def __init__(self, mem_size: int = MEM_SIZE, cell_size: type = CELL_TYPE ) -> None :
+    def __init__(self, mem_size: int = MEM_SIZE, cell_size: type = CELL_TYPE, w_mem: BFMemory = None, w_in: BFInput = None, w_out: BFOutput = None ) -> None :
         self.mem = np.zeros(mem_size, dtype=cell_size)
         self.mem_size = mem_size
         self.pc = 0
