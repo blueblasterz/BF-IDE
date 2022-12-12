@@ -24,7 +24,7 @@ class BFMemory(tk.Frame):
 
         self.labels_title = []
         for i,titre in enumerate(["@","dec","ascii"]):
-            l = tk.Label(self, text=titre,bg = "#FFFFFF",borderwidth=1,relief="solid",padx=10,pady=5, font='TkFixedFont')
+            l = tk.Label(self, text=titre,bg = "#FFFFFF",borderwidth=1,relief="solid",padx=10,pady=5)
             # l.bindtags(("Memory",) + l.bindtags())
             l.grid(row=0,column=i,sticky = "NSEW")
             self.labels_title.append(l)
@@ -33,7 +33,7 @@ class BFMemory(tk.Frame):
 
         for i in range(self.lineDisplay):
             for j in range(3):
-                l = tk.Label(self,text= "", width = self.labels_title[j].cget("width"),bg = "#FFFFFF",borderwidth=1,relief="solid",pady=2, font='TkFixedFont')
+                l = tk.Label(self,text= "", width = self.labels_title[j].cget("width"),bg = "#FFFFFF",borderwidth=1,relief="solid",pady=2)
                 
                 # l.bindtags(("Memory",) + l.bindtags())
                 # if i==0: print(l.bindtags())

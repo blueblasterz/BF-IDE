@@ -206,7 +206,7 @@ class IDE(tk.Frame):
 
     def __init__(self,root):
         super().__init__(root, width=500, height=500, relief=tk.RIDGE,borderwidth=1) 
-        self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30, font='TkFixedFont')
+        self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
         self.codeZone.grid(column=0,row=0,padx=10,pady=10)
 
         self.mem = BFMemory(self, MEM_SIZE, CELL_TYPE)
@@ -218,6 +218,8 @@ class App:
     def __init__(self):
         self.tk = tk.Tk()
         self.tk.title("BF-IDE")
+
+        self.tk.option_add("*Font", "TkFixedFont") # sets the default font for all widgets to be created
 
         self.ide = IDE(self.tk)
 
