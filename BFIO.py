@@ -65,13 +65,11 @@ class BFInput(tk.Frame):
         if k == "Return":
             self.add_input(self.new_inp.get())
             self.new_inp.set("")
-        elif __name__ == '__main__' and k == "w": # TODO remove that, even if it has no impact when the widget is used externaly
-            print(self.get_input())
 
     def add_input(self,inp : str):
         # print(f"adding '{inp}' as " + ("ascii codes" if self.inp_type.get() == '2' else "numeric values"))
         if self.inp_type.get() == 1: #decimal
-            tokens = inp.split(" ")
+            tokens = inp.split()
             for t in tokens:
                 self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "")+ str(int(t)) )
                 self.input_list.append( int(t) )
@@ -119,6 +117,8 @@ if __name__ == '__main__':
 
     for i in range(100,115):
         inp.add_input(str(i))
+
+    app.bind_all("w", lambda e: print(inp.get_input()))
 
     out = BFOutput(app)
     out.pack(padx=10,pady=10, anchor="nw",fill="x")
