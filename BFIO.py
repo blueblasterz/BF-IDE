@@ -21,22 +21,36 @@ class BFInput(tk.Frame):
 
         frame_list.bind("<Configure>", self.check_if_scroll_necessary)
 
-        lbl1 = tk.Label(self,text="Add Input :")
-
+        frame_input = tk.Frame(self)
+        lbl1 = tk.Label(frame_input,text="Add Input :")
         self.new_inp = tk.StringVar()
         validate_cmd = self.register(self.inp_validator)
-        self.entry = tk.Entry(self, width=15, textvariable=self.new_inp, validate='all', validatecommand=(validate_cmd,'%d','%S') )
+        self.entry = tk.Entry(frame_input, width=15, textvariable=self.new_inp, validate='all', validatecommand=(validate_cmd,'%d','%S') )
         self.new_inp.set("")
         
-        frame_type = tk.Frame(self)
+        frame_type = tk.Frame(frame_input)
         self.inp_type = tk.IntVar()
         self.b_dec = tk.Radiobutton(frame_type, variable=self.inp_type, text="Decimal", value=1, command = lambda : self.new_inp.set(""))
         self.b_ascii = tk.Radiobutton(frame_type, variable=self.inp_type, text="Ascii Code", value=2, command = lambda : self.new_inp.set(""))
         self.inp_type.set(1)
 
+
+
+        frame_used = tk.Frame(self)
+        frame_txt_used = tk.Frame(frame_used)
+        lbl_used = tk.Label(frame_used, text="Used Input :")
+        self.displayed_list_var_used = tk.StringVar()
+        self.inp_list_display_used = tk.Entry(frame_txt_used,width=10, state=tk.DISABLED, textvariable=self.displayed_list_var_used, disabledforeground="#505050")
+        self.scrollbar_list_used = tk.Scrollbar(frame_txt_used, orient="horizontal", command = self.inp_list_display_used.xview)
+        self.inp_list_display_used.configure(xscrollcommand=self.scrollbar_list_used.set)
+        self.displayed_list_var_used.set("")
+        frame_used.bind("<Configure>", self.check_if_scroll_necessary)
+        self.button_repack = tk.Button(frame_used, text="Repack used\ninputs")
+
+
         lbl_list.pack(side=tk.LEFT, padx=5, pady=15)
         self.inp_list_display.pack(fill='x')
-        self.scrollbar_list.pack(fill="x")
+        # self.scrollbar_list.pack(fill="x")
         frame_txt.pack(side=tk.LEFT,expand=True,fill='x',padx=5,pady=5)
 
         frame_list.pack(side=tk.TOP, expand=False, fill='x')
@@ -48,10 +62,22 @@ class BFInput(tk.Frame):
         self.b_ascii.pack(side=tk.BOTTOM,anchor="w")
         frame_type.pack(side=tk.LEFT,padx=5,pady=5)
 
+        frame_input.pack(side=tk.TOP,fill='x')
+
+
+        lbl_used.pack(side=tk.LEFT, padx=5, pady=15)
+        self.inp_list_display_used.pack(fill='x')
+        # self.scrollbar_list_used.pack(fill="x")
+        frame_txt_used.pack(side=tk.LEFT,expand=True,fill='x',padx=5,pady=5)
+        self.button_repack.pack(side=tk.LEFT)
+
+        frame_used.pack(side=tk.TOP, expand=False, fill='x',padx=5,pady=5)
+
 
         self.input_list = [] # list of numbers to be used as input for the BF program
 
         self.entry.bind("<KeyPress>", self.kbevt)
+        # self.check_if_scroll_necessary()
 
     def inp_validator(self, cause : str, value : str):
         # print(f"{cause = } , {value = }")
@@ -66,9 +92,9 @@ class BFInput(tk.Frame):
             self.add_input(self.new_inp.get())
             self.new_inp.set("")
 
-    def add_input(self,inp : str):
+    def add_input(self,inp : str, force_type=-1):
         # print(f"adding '{inp}' as " + ("ascii codes" if self.inp_type.get() == '2' else "numeric values"))
-        if self.inp_type.get() == 1: #decimal
+        if (self.inp_type.get() == 1 and force_type == -1) or force_type==1: #decimal
             tokens = inp.split()
             for t in tokens:
                 self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "")+ str(int(t)) )
@@ -83,23 +109,43 @@ class BFInput(tk.Frame):
     def get_input(self):
         if self.input_list:
             curr_text = self.displayed_list_var.get()
+            curr_text_used = self.displayed_list_var_used.get()
             if " " in curr_text:
                 self.displayed_list_var.set( curr_text[ curr_text.index(" ")+1:] )
             else:
                 self.displayed_list_var.set("")
+            
+            self.displayed_list_var_used.set( self.displayed_list_var_used.get() + " " + str(self.input_list[0]))
+
             self.check_if_scroll_necessary()
             return self.input_list.pop(0)
         else:
             print("Empty input list, returning 0")
+            self.displayed_list_var_used.set( self.displayed_list_var_used.get() + " 0")
             return 0
 
     def check_if_scroll_necessary(self, e=None):
         font_measure = tkFont.nametofont("TkFixedFont").measure(" ")
         # print(len(self.inp_list_display.get())*font_measure, self.inp_list_display.winfo_width())
+        if len(self.inp_list_display.get()) == 0 and self.inp_list_display.winfo_width() == 1:
+            return
+        
         if (len(self.inp_list_display.get())+1)*font_measure > self.inp_list_display.winfo_width():
             self.scrollbar_list.pack(fill="x")
+
         else:
             self.scrollbar_list.pack_forget()
+        
+        if len(self.inp_list_display_used.get()) == 0 and self.inp_list_display_used.winfo_width() == 1:
+            return
+        
+        if (len(self.inp_list_display_used.get())+1)*font_measure > self.inp_list_display_used.winfo_width():
+            self.scrollbar_list_used.pack(fill="x")
+        else:
+            self.scrollbar_list_used.pack_forget()
+            
+        
+
 
 class BFOutput(tk.Frame):
     def __init__(self,root):
@@ -115,8 +161,9 @@ if __name__ == '__main__':
     inp = BFInput(app)
     inp.pack(padx=10,pady=10, anchor="nw",fill="x")
 
-    for i in range(100,115):
-        inp.add_input(str(i))
+    inp.add_input("un bon test !",force_type=2)
+    # for i in range(100,115):
+    #     inp.add_input(str(i))
 
     app.bind_all("w", lambda e: print(inp.get_input()))
 
