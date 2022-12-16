@@ -45,7 +45,7 @@ class BFInput(tk.Frame):
         self.inp_list_display_used.configure(xscrollcommand=self.scrollbar_list_used.set)
         self.displayed_list_var_used.set("")
         frame_used.bind("<Configure>", self.check_if_scroll_necessary)
-        self.button_repack = tk.Button(frame_used, text="Repack used\ninputs")
+        self.button_repack = tk.Button(frame_used, text="Repack used\ninputs",command=self.repack_input)
 
 
         lbl_list.pack(side=tk.LEFT, padx=5, pady=15)
@@ -91,19 +91,39 @@ class BFInput(tk.Frame):
         if k == "Return":
             self.add_input(self.new_inp.get())
             self.new_inp.set("")
+    
+    def repack_input(self):
+        # print("oki on repack :):):):)")
+        tokens = self.displayed_list_var_used.get().split()
+        if len(tokens) == 0: return
 
-    def add_input(self,inp : str, force_type=-1):
+        for t in reversed(tokens):
+            self.add_input(t, 1, prepend=True)
+        
+        self.displayed_list_var_used.set("")
+
+        self.check_if_scroll_necessary()
+
+    def add_input(self,inp : str, force_type=-1, prepend=False):
         # print(f"adding '{inp}' as " + ("ascii codes" if self.inp_type.get() == '2' else "numeric values"))
         if (self.inp_type.get() == 1 and force_type == -1) or force_type==1: #decimal
             tokens = inp.split()
             for t in tokens:
-                self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "")+ str(int(t)) )
-                self.input_list.append( int(t) )
+                if prepend:
+                    self.displayed_list_var.set( str(int(t)) + (" " if self.input_list else "") + self.displayed_list_var.get() )
+                    self.input_list[0:0] = [ int(t) ]
+                else:
+                    self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "")+ str(int(t)) )
+                    self.input_list.append( int(t) )
 
         else: # ascii
             for c in inp:
-                self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "") + str(ord(c)) )
-                self.input_list.append( ord(c) )
+                if prepend:
+                    self.displayed_list_var.set( str(ord(c)) + (" " if self.input_list else "") + self.displayed_list_var.get() )
+                    self.input_list[0:0] = ( ord(c) )
+                else:
+                    self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "") + str(ord(c)) )
+                    self.input_list.append( ord(c) )
         self.check_if_scroll_necessary()
 
     def get_input(self):
