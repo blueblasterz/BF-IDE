@@ -8,10 +8,12 @@ import tkinter.font as tkFont
 
 class BFInput(tk.Frame):
     def __init__(self,root):
-        tk.Frame.__init__(self,root,borderwidth=1, relief=tk.RIDGE)
+        # framestyle = {"background":"#202020"}
+        framestyle = {}
+        tk.Frame.__init__(self,root,borderwidth=1, relief=tk.RIDGE,**framestyle)
 
-        frame_list = tk.Frame(self)
-        frame_txt = tk.Frame(frame_list)
+        frame_list = tk.Frame(self,**framestyle)
+        frame_txt = tk.Frame(frame_list,**framestyle)
         lbl_list = tk.Label(frame_list, text="Current Input List :")
         self.displayed_list_var = tk.StringVar()
         self.inp_list_display = tk.Entry(frame_txt,width=10, state=tk.DISABLED, textvariable=self.displayed_list_var, disabledforeground="#000000")
@@ -19,7 +21,7 @@ class BFInput(tk.Frame):
         self.inp_list_display.configure(xscrollcommand=self.scrollbar_list.set)
         self.displayed_list_var.set("")
 
-        frame_list.bind("<Configure>", self.check_if_scroll_necessary)
+        frame_list.bind("<Configure>", self.update_scrollbar_visibility)
 
         frame_input = tk.Frame(self)
         lbl1 = tk.Label(frame_input,text="Add Input :")
@@ -44,7 +46,7 @@ class BFInput(tk.Frame):
         self.scrollbar_list_used = tk.Scrollbar(frame_txt_used, orient="horizontal", command = self.inp_list_display_used.xview)
         self.inp_list_display_used.configure(xscrollcommand=self.scrollbar_list_used.set)
         self.displayed_list_var_used.set("")
-        frame_used.bind("<Configure>", self.check_if_scroll_necessary)
+        frame_used.bind("<Configure>", self.update_scrollbar_visibility)
         self.button_repack = tk.Button(frame_used, text="Repack used\ninputs",command=self.repack_input)
 
 
@@ -77,7 +79,7 @@ class BFInput(tk.Frame):
         self.input_list = [] # list of numbers to be used as input for the BF program
 
         self.entry.bind("<KeyPress>", self.kbevt)
-        # self.check_if_scroll_necessary()
+        # self.update_scrollbar_visibility()
 
     def inp_validator(self, cause : str, value : str):
         # print(f"{cause = } , {value = }")
@@ -102,7 +104,7 @@ class BFInput(tk.Frame):
         
         self.displayed_list_var_used.set("")
 
-        self.check_if_scroll_necessary()
+        self.update_scrollbar_visibility()
 
     def add_input(self,inp : str, force_type=-1, prepend=False):
         # print(f"adding '{inp}' as " + ("ascii codes" if self.inp_type.get() == '2' else "numeric values"))
@@ -124,7 +126,7 @@ class BFInput(tk.Frame):
                 else:
                     self.displayed_list_var.set( self.displayed_list_var.get() + (" " if self.input_list else "") + str(ord(c)) )
                     self.input_list.append( ord(c) )
-        self.check_if_scroll_necessary()
+        self.update_scrollbar_visibility()
 
     def get_input(self):
         if self.input_list:
@@ -137,14 +139,14 @@ class BFInput(tk.Frame):
             
             self.displayed_list_var_used.set( self.displayed_list_var_used.get() + " " + str(self.input_list[0]))
 
-            self.check_if_scroll_necessary()
+            self.update_scrollbar_visibility()
             return self.input_list.pop(0)
         else:
             print("Empty input list, returning 0")
             self.displayed_list_var_used.set( self.displayed_list_var_used.get() + " 0")
             return 0
 
-    def check_if_scroll_necessary(self, e=None):
+    def update_scrollbar_visibility(self, e=None):
         font_measure = tkFont.nametofont("TkFixedFont").measure(" ")
         # print(len(self.inp_list_display.get())*font_measure, self.inp_list_display.winfo_width())
         if len(self.inp_list_display.get()) == 0 and self.inp_list_display.winfo_width() == 1:
@@ -169,7 +171,79 @@ class BFInput(tk.Frame):
 
 class BFOutput(tk.Frame):
     def __init__(self,root):
-        tk.Frame.__init__(self,root)
+        tk.Frame.__init__(self,root, borderwidth=1, relief=tk.RIDGE)
+
+        # if set to -1, tabs are displayed as tabs (tabs align every 4 chars)
+        # if not, tabs are printed as x spaces
+        # note that default tkinter implementation of \t seems wrong, or at least I can't make it work properly on my machine
+        # so consider setting this to 4 or 8 (spaces)
+        self.tabs_as_spaces = 4
+
+        lbl = tk.Label(self, text="Output :")
+
+        self.var_chkbox_wrap = tk.IntVar()
+
+        self.chkbox_wrap = tk.Checkbutton(self, text="auto-wrap", indicatoron=True, bd=1,relief=tk.RAISED,
+            variable=self.var_chkbox_wrap,
+            command=self.set_autowrap)
+
+        frame_txt = tk.Frame(self)
+
+        tab_size = tkFont.nametofont("TkFixedFont").measure("    ")
+
+        self.txt = tk.Text(frame_txt, wrap='none',height=10,width=40, state='disabled', bg="#CCCCCC",tabs=tab_size)
+
+        self.hscroll = tk.Scrollbar(frame_txt, orient="horizontal", command= self.txt.xview)
+        self.vscroll = tk.Scrollbar(frame_txt, orient="vertical", command= self.txt.yview)
+        self.txt.configure(xscrollcommand=self.hscroll.set, yscrollcommand=self.vscroll.set)
+
+        self.btn_clear = tk.Button(self, text="Clear output", justify='center',command=self.clear_output)
+
+
+        self.txt.grid(row=0,column=0,sticky="nsew")
+        self.vscroll.grid(row=0,column=1,sticky="nsew")
+        self.hscroll.grid(row=1,column=0,sticky='nsew')
+
+        lbl.grid(row=0,column=0,sticky="w",padx=5,pady=5)
+        self.btn_clear.grid(row=0,column=8,sticky="e",padx=(0,5),pady=5)
+        self.chkbox_wrap.grid(row=0,column=9,sticky="e",padx=(0,5),pady=5)
+
+        frame_txt.grid(row=1,column=0, columnspan=10, padx=5,pady=(0,5))
+
+
+        self.txt.tag_config("not_printable", background="#E0C0E0",relief=tk.GROOVE,borderwidth=2,tabs=(tab_size,'right'))
+        self.txt.tag_config("special", background="#E0E0C0",tabs=(tab_size,))
+
+
+    def clear_output(self):
+        self.txt.configure(state='normal')
+        self.txt.delete('1.0', tk.END)
+        self.txt.configure(state='disabled')
+    
+    def set_autowrap(self,val=None):
+        """
+        val: - None > sets autowrap according to the checkbox
+             - True/False > sets autowrap to true/false, and updates checkbox
+        """
+        if val != None:
+            self.var_chkbox_wrap.set(val)
+        self.txt.configure(wrap='char' if self.var_chkbox_wrap.get() else 'none')
+
+    def add(self,txt,color=None):
+        """
+        color : - None > default color
+                - 'not_printable' > by default, #FF00FF (magenta)
+                - 'special'       > by default, #FFFF00 (yellow)
+
+        """
+        self.txt.configure(state='normal')
+        if txt == "\t" and self.tabs_as_spaces != -1:
+            txt = " "*(self.tabs_as_spaces-(len(self.txt.get("end-1c linestart", "end-1c lineend")))%self.tabs_as_spaces)
+        if not color:
+            self.txt.insert(tk.END, txt)
+        else:
+            self.txt.insert(tk.END, txt, (color,))
+        self.txt.configure(state='disabled')
 
 
 if __name__ == '__main__':
@@ -181,13 +255,36 @@ if __name__ == '__main__':
     inp = BFInput(app)
     inp.pack(padx=10,pady=10, anchor="nw",fill="x")
 
-    inp.add_input("un bon test !",force_type=2)
+    # inp.add_input("un bon test !\n\thihi\ta\nqq\teeeee\taa",force_type=2)
+    inp.add_input("123412341234\n\t1234\n\t\t1234\n\x03aaa\ta\taaa\n|\n|",force_type=2)
     # for i in range(100,115):
     #     inp.add_input(str(i))
 
-    app.bind_all("w", lambda e: print(inp.get_input()))
 
     out = BFOutput(app)
-    out.pack(padx=10,pady=10, anchor="nw",fill="x")
+    out.pack(padx=10,pady=10, anchor="nw",fill="both",expand=True)
+
+    def aa(e=None):
+        # out.add(chr(inp.get_input()))
+        # return
+        r = repr(chr(inp.get_input()))[1:-1]
+
+        if len(r) == 1:
+            out.add(r)
+        else:
+            if r == "\\n":
+                # print("special n")
+                out.add(" ", color="special")
+                out.add("\n")
+            elif r == "\\t":
+                # print("special t")
+                out.add("\t", color="special")
+            else:
+                # print("not_printable")
+                out.add(r,"not_printable")
+
+    app.bind_all("w", aa)
+
+    app.bind_all("<Escape>", lambda e: app.destroy())
 
     app.mainloop()
