@@ -110,17 +110,36 @@ class BFCodeArea(tk.Frame):
         self.txt.bind_all("<KeyRelease>", lambda e: self.update_syntax_highlight(beg="insert -1c", end="insert"))
         self.txt.bind_all("<Button-1>", lambda e: self.update_syntax_highlight(beg="insert -1c", end="insert"))
         
+        def ctrl_handler(e : tk.Event):
+            # print(f"aa {e.state} {e.type} {ctrl_handler.curr_pos}")
+            if e.state==20:
+                if e.type == "3":
+                    self.update_syntax_highlight(beg=ctrl_handler.curr_pos, end=self.txt.index("insert"))
+                    ctrl_handler.curr_pos = self.txt.index("insert")
+            return "break"
+        ctrl_handler.curr_pos = "1.0"
+        def update_curr_pos(e):
+            # print(f"updating curr_pos to {self.txt.index('insert')}")
+            ctrl_handler.curr_pos = self.txt.index("insert")
+        for k in "<Down>","<Up>","<Left>","<Right>":
+            self.txt.bind_all(k, update_curr_pos, add="+")
+        self.txt.bind_all("<Button-1>", update_curr_pos, add="+")
+        self.txt.bind_all("<Button-2>", update_curr_pos, add="+")
+        self.txt.bind_all("<KeyPress-v>", ctrl_handler, add="+" )
+        self.txt.bind_all("<KeyRelease-v>", ctrl_handler, add="+" )
+
     def update_syntax_highlight(self, e=None, beg=-1, end=-1):
-        
         if beg == -1: 
             beg = "1.0"
             line,column = 1,0
         else:
-            tmp = self.txt.index("insert -1c").split(".")
+            tmp = self.txt.index(beg).split(".")
             line = int(tmp[0])
             column = int(tmp[1])
         if end == -1:
             end = tk.END
+
+        # print(f"updating from {beg} to {end}, txt={self.txt.get(beg,end)}")
         txt = self.txt.get(beg, end)
         # print(txt)
         for k in self.syntax_params.keys():
@@ -157,7 +176,7 @@ class BFCodeArea(tk.Frame):
 
         for c in txt:
             tk_idx = f"{line}.{column}"
-            # print(c, self.txt.get(tk_idx, tk_idx + "+1c"))
+            # print(f"{tk_idx} : {c}, {self.txt.get(tk_idx)}")
             if c in self.syntax_params.keys():
                 # print(self.syntax_params[c])
                 # params = self.syntax.params[c]["params"]
@@ -220,16 +239,16 @@ if __name__ == '__main__':
 
     codeArea.pack(padx=5, pady=5)
 
-    codeArea.bind_all("u", codeArea.update_syntax_highlight)
+    codeArea.bind_all("u", lambda e: codeArea.update_syntax_highlight(beg="1.0", end="1.27"))
 
 
-    codeArea.txt.insert("1.0", """>,[ ------------------------------------------------ < remove 48 to get value
->> +++++++++ [- add (0)*9 to (1)
-  <<[->+>>+<<<]>>>[-<<<+>>>]<
-] <<
-> [-<+>] < add (1) to (0)
-> , read next digit
-]<""")
+#     codeArea.txt.insert("1.0", """>,[ ------------------------------------------------ < remove 48 to get value
+# >> +++++++++ [- add (0)*9 to (1)
+#   <<[->+>>+<<<]>>>[-<<<+>>>]<
+# ] <<
+# > [-<+>] < add (1) to (0)
+# > , read next digit
+# ]<""")
 
     # a Hello World! program taken from http://www.bf.doleczek.pl/
     # codeArea.txt.insert("1.0", """

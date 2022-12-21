@@ -9,7 +9,7 @@ import numpy as np
 
 from BFMemory import BFMemory
 from BFIO import BFInput, BFOutput
-
+from BFCodeArea import BFCodeArea
  
 # number of cells in the memory (default is 30000)
 MEM_SIZE = 30000
@@ -206,8 +206,12 @@ class IDE(tk.Frame):
 
     def __init__(self,root):
         super().__init__(root, width=500, height=500, relief=tk.RIDGE,borderwidth=1) 
-        self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
-        self.codeZone.grid(column=0,row=0,padx=10,pady=10)
+        # self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
+        # self.codeZone.grid(column=0,row=0,padx=10,pady=10)
+
+        self.codeArea = BFCodeArea(self)
+
+        self.codeArea.grid(row=0,column=0,padx=5,pady=5)
 
         self.mem = BFMemory(self, MEM_SIZE, CELL_TYPE)
 
