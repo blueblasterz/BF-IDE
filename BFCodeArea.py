@@ -116,15 +116,13 @@ class BFCodeArea(tk.Frame):
                 if e.type == "3":
                     self.update_syntax_highlight(beg=ctrl_handler.curr_pos, end=self.txt.index("insert"))
                     ctrl_handler.curr_pos = self.txt.index("insert")
-            return "break"
+            # return "break"
         ctrl_handler.curr_pos = "1.0"
         def update_curr_pos(e):
             # print(f"updating curr_pos to {self.txt.index('insert')}")
             ctrl_handler.curr_pos = self.txt.index("insert")
-        for k in "<Down>","<Up>","<Left>","<Right>":
-            self.txt.bind_all(k, update_curr_pos, add="+")
-        self.txt.bind_all("<Button-1>", update_curr_pos, add="+")
-        self.txt.bind_all("<Button-2>", update_curr_pos, add="+")
+        self.txt.bind_all("<KeyPress>", update_curr_pos, add="+")
+        self.txt.bind_all("<Button>", update_curr_pos, add="+")
         self.txt.bind_all("<KeyPress-v>", ctrl_handler, add="+" )
         self.txt.bind_all("<KeyRelease-v>", ctrl_handler, add="+" )
 
