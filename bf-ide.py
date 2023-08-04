@@ -217,6 +217,8 @@ class IDE(tk.Frame):
 
         self.mem.grid(column=1,row=0,padx=10,pady=10)
 
+    def load_code(self, path):
+        self.codeArea.load_code(path)
         
 class App:
     def __init__(self):
@@ -242,6 +244,8 @@ class App:
         # print(f"from App : {k}")
         if k == "Escape":
             self.tk.destroy()
+        elif k == "l":
+            self.ide.load_code("print_squares.bf")
 
 if __name__ == '__main__':
 

@@ -260,8 +260,15 @@ class BFCodeArea(ttk.Frame):
                 self.txt.tag_add("syntax-highlight_bracket", curr)
                 self.txt.tag_add("syntax-highlight_bracket", self.jump_table[curr])
 
-        
+    def load_code(self,path):
 
+        with open(path) as file:
+            txt = file.read()
+        # self.codeArea.txt
+        self.txt.delete("1.0","end")
+        self.txt.insert("1.0", txt)
+        self.update_syntax_highlight()
+        
 if __name__ == '__main__':
     app = tk.Tk()
     app.title("BFCodeArea test")
