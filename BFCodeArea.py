@@ -1,5 +1,7 @@
 import tkinter as tk
 import tkinter.font as tkFont
+import tkinter.ttk as ttk
+import clipboard
 
 """
 BFCodeArea is a widget that extends from tk.Frame
@@ -21,9 +23,13 @@ TODO:
 
 """
 
-class BFCodeArea(tk.Frame):
-    def __init__(self,root):
-        tk.Frame.__init__(self, root, bd=1, relief=tk.RIDGE)
+class BFCodeArea(ttk.Frame):
+    def __init__(self,root, width=80,height=20):
+        style_bfinp = ttk.Style()
+        style_bfinp.configure("frame_bfcode.TFrame", borderwidth=0, relief='raised')
+        ttk.Frame.__init__(self,root,style="frame_bfcode.TFrame")
+
+        tab_size = tkFont.nametofont("TkFixedFont").measure("    ")
 
         font_italic = tkFont.nametofont("TkFixedFont").copy()
         font_italic.configure(slant="italic")
@@ -85,11 +91,26 @@ class BFCodeArea(tk.Frame):
         }
         self.jump_table = {}
 
+        frame_txt = ttk.Frame(self)
+        self.txt = tk.Text(frame_txt,
+                           width=width,
+                           height=height,
+                           **self.syntax_params["default"]["params"],
+                           bg="#000000",
+                           undo=True,
+                           autoseparators=True,
+                           maxundo=-1,
+                           tabs=tab_size)
+        self.vscroll = ttk.Scrollbar(frame_txt,
+                                     orient="vertical",
+                                     command=self.txt.yview )
 
-        self.txt = tk.Text(self, width=80,height=20, **self.syntax_params["default"]["params"], bg="#000000")
+        self.txt.configure(yscrollcommand=self.vscroll.set)
 
-        self.txt.grid(row=0,column=0,sticky = "nsew",padx=5,pady=5)
+        self.txt.grid(row=0,column=0,sticky = "nsew")
+        self.vscroll.grid(row=0,column=1,sticky="ns")
 
+        frame_txt.grid(row=0,column=0, sticky="nsew", padx=5,pady=5)
 
         # def handler(e,k,tag):
         #     self.txt.insert("insert", k, (tag,))
@@ -107,24 +128,40 @@ class BFCodeArea(tk.Frame):
         self.txt.tag_raise("syntax-highlight_bracket","syntax-]")
 
         # self.txt.bind_all("<KeyPress>", lambda e: print(e.keycode), add='+')
-        self.txt.bind_all("<KeyRelease>", lambda e: self.update_syntax_highlight(beg="insert -1c", end="insert"))
-        self.txt.bind_all("<Button-1>", lambda e: self.update_syntax_highlight(beg="insert -1c", end="insert"))
-        
-        def ctrl_handler(e : tk.Event):
-            # print(f"aa {e.state} {e.type} {ctrl_handler.curr_pos}")
-            if e.state==20:
-                if e.type == "3":
-                    self.update_syntax_highlight(beg=ctrl_handler.curr_pos, end=self.txt.index("insert"))
-                    ctrl_handler.curr_pos = self.txt.index("insert")
+        self.txt.bind_all("<KeyRelease>", lambda e: self.update_syntax_highlight(beg="insert -2c", end="insert"))
+        self.txt.bind_all("<Button-1>", lambda e: self.update_syntax_highlight(beg="insert -2c", end="insert"))
+
+        # ctrl_handler.curr_pos = "1.0"
+        def paste_handler(e : tk.Event):
+            try: # remove selection before pasting
+                self.txt.delete("sel.first","sel.last")
+            except:
+                pass
+            t = clipboard.paste()
+            print(t)
+            self.update_syntax_highlight(beg=f"insert -{len(t)}c", end="insert")
+            return "break"
+        def copy_handler(e : tk.Event):
+            t = self.txt.selection_get()
+            self.txt.update()
+            print(t)
+            clipboard.copy(t)
+            return "break"
+        def cut_handler(e: tk.Event):
+            t = self.txt.get("sel.first","sel.last")
+            self.txt.delete("sel.first","sel.last")
+            clipboard.copy(t)
             # return "break"
-        ctrl_handler.curr_pos = "1.0"
-        def update_curr_pos(e):
-            # print(f"updating curr_pos to {self.txt.index('insert')}")
-            ctrl_handler.curr_pos = self.txt.index("insert")
-        self.txt.bind_all("<KeyPress>", update_curr_pos, add="+")
-        self.txt.bind_all("<Button>", update_curr_pos, add="+")
-        self.txt.bind_all("<KeyPress-v>", ctrl_handler, add="+" )
-        self.txt.bind_all("<KeyRelease-v>", ctrl_handler, add="+" )
+        self.txt.bind_all("<<Paste>>", paste_handler)
+        self.txt.bind_all("<<Cut>>", cut_handler)
+        self.txt.bind_all("<<Copy>>", copy_handler)
+        def select_all(e):
+            self.txt.tag_add(tk.SEL, "1.0", tk.END)
+            self.txt.mark_set("insert", "1.0")
+            self.txt.see("insert")
+            return 'break'
+        self.txt.bind("<Control-Key-a>", select_all)
+        self.txt.bind("<Control-Key-A>", select_all)
 
     def update_syntax_highlight(self, e=None, beg=-1, end=-1):
         if beg == -1: 
@@ -230,6 +267,9 @@ if __name__ == '__main__':
     app.title("BFCodeArea test")
 
     app.option_add("*Font", "TkFixedFont")
+
+    app.tk.call("source","azure.tcl")
+    app.tk.call("set_theme","dark")
 
     app.bind_all("<Escape>", lambda e: app.destroy())
 

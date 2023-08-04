@@ -8,7 +8,7 @@ import tkinter.scrolledtext as scrolledtext
 import numpy as np
 
 from BFMemory import BFMemory
-from BFIO import BFInput, BFOutput
+from BFIO_ttk import BFInput, BFOutput
 from BFCodeArea import BFCodeArea
  
 # number of cells in the memory (default is 30000)
@@ -209,7 +209,7 @@ class IDE(tk.Frame):
         # self.codeZone = scrolledtext.ScrolledText(self, width=80, height=30)
         # self.codeZone.grid(column=0,row=0,padx=10,pady=10)
 
-        self.codeArea = BFCodeArea(self)
+        self.codeArea = BFCodeArea(self,width=80,height=25)
 
         self.codeArea.grid(row=0,column=0,padx=5,pady=5)
 
@@ -225,6 +225,9 @@ class App:
 
         self.tk.option_add("*Font", "TkFixedFont") # sets the default font for all widgets to be created
 
+        self.tk.call("source","azure.tcl")
+        self.tk.call("set_theme","dark")
+        
         self.ide = IDE(self.tk)
 
         self.ide.pack(padx=10,pady=10)
@@ -237,7 +240,7 @@ class App:
     def kbdevt(self,e):
         k = e.keysym
         # print(f"from App : {k}")
-        if k == "q" or k == "Escape":
+        if k == "Escape":
             self.tk.destroy()
 
 if __name__ == '__main__':

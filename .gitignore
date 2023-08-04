@@ -1,2 +1,6 @@
 *.bf
 __pycache__/*
+*.zip
+*.attempt
+theme/*
+azure.tcl
